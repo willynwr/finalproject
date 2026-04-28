@@ -1,0 +1,29 @@
+<h2 class="text-lg font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">{{ $doseSectionTitle ?? 'Recommended Fertilizer Doses' }}</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- UREA -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:border-blue-300 transition">
+        <div class="flex justify-between items-start mb-6">
+            <div class="text-sm font-bold text-slate-500 tracking-wider">UREA DOSE</div>
+            <div class="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded">Kg / Ha</div>
+        </div>
+        <div class="text-5xl font-extrabold text-slate-800" id="dose-urea">--</div>
+    </div>
+
+    <!-- SP-36 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:border-amber-300 transition">
+        <div class="flex justify-between items-start mb-6">
+            <div class="text-sm font-bold text-slate-500 tracking-wider">SP-36 DOSE</div>
+            <div class="bg-amber-50 text-amber-700 text-xs font-bold px-2 py-1 rounded">Kg / Ha</div>
+        </div>
+        <div class="text-5xl font-extrabold text-slate-800" id="dose-sp36">--</div>
+    </div>
+
+    <!-- KCL -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:border-purple-300 transition">
+        <div class="flex justify-between items-start mb-6">
+            <div class="text-sm font-bold text-slate-500 tracking-wider">KCL DOSE</div>
+            <div class="bg-purple-50 text-purple-700 text-xs font-bold px-2 py-1 rounded">Kg / Ha</div>
+        </div>
+        <div class="text-5xl font-extrabold text-slate-800" id="dose-kcl">--</div>
+    </div>
+</div>

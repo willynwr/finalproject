@@ -6,24 +6,37 @@
     <title>{{ $pageTitle ?? 'Dashboard Monitoring Smart Farming' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tambahkan Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Poppins', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen relative flex flex-col">
+    <!-- Background Decor -->
+    <div class="fixed top-0 inset-x-0 h-96 bg-gradient-to-b from-emerald-600 to-transparent opacity-10 -z-10 pointer-events-none"></div>
+    <div class="fixed -top-40 -right-40 w-96 h-96 bg-emerald-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-blob -z-10 pointer-events-none"></div>
+    
     <!-- Navbar / Header -->
-    <header class="bg-white shadow-sm border-b pb-4 pt-6 px-8 mb-8 flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">{{ $pageTitle ?? 'Smart Farming Dashboard' }}</h1>
-            <p class="text-sm text-slate-500 mt-1">{{ $pageSubtitle ?? 'Real-time Soil Nutrition & Fertilizer Recommendations' }}</p>
+    <header class="bg-white/80 backdrop-blur-md shadow-sm border-b pb-4 pt-6 px-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center sticky top-0 z-20">
+        <div class="mb-4 md:mb-0 flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-600 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">{{ $pageTitle ?? 'Smart Farming Dashboard' }}</h1>
+                <p class="text-sm text-slate-500 mt-1 font-medium">{{ $pageSubtitle ?? 'Real-time Soil Nutrition & Fertilizer Recommendations' }}</p>
+            </div>
         </div>
-        <div class="flex flex-col items-end space-y-3">
+        <div class="flex flex-col items-end space-y-3 w-full md:w-auto">
             <nav class="flex flex-wrap items-center justify-end gap-2">
-                <a href="{{ url('/rekomendasi-pupuk') }}" class="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition {{ request()->is('rekomendasi-pupuk') ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800' }}">
+                <a href="{{ url('/') }}" class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                    Home
+                </a>
+                <a href="{{ url('/rekomendasi-pupuk') }}" class="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition {{ request()->is('rekomendasi-pupuk') ? 'border-blue-700 bg-blue-600 text-white shadow-sm' : 'border-slate-200 bg-white/50 text-slate-600 hover:border-slate-300 hover:text-slate-800 hover:bg-white' }}">
                     Rekomendasi Pupuk
                 </a>
-                <a href="{{ url('/kesuburan-tanah') }}" class="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition {{ request()->is('kesuburan-tanah') ? 'border-emerald-700 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800' }}">
+                <a href="{{ url('/kesuburan-tanah') }}" class="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition {{ request()->is('kesuburan-tanah') ? 'border-emerald-700 bg-emerald-600 text-white shadow-sm' : 'border-slate-200 bg-white/50 text-slate-600 hover:border-slate-300 hover:text-slate-800 hover:bg-white' }}">
                     Kesuburan Tanah
                 </a>
             </nav>
@@ -87,49 +100,10 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <div class="text-sm font-semibold text-slate-500 mb-2 tracking-wide">Kelas Kesuburan</div>
-                <div id="fertility-class" class="text-3xl font-extrabold text-slate-800">--</div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <div class="text-sm font-semibold text-slate-500 mb-2 tracking-wide">GPS Update</div>
-                <div id="gps-update-status" class="text-3xl font-extrabold text-slate-800">--</div>
-            </div>
-        </div>
+        @include('partials.soil-fertility')
 
         @if (($showDoseSection ?? true))
-            <!-- Section: Fertilizer Doses -->
-            <h2 class="text-lg font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">{{ $doseSectionTitle ?? 'Recommended Fertilizer Doses' }}</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- UREA -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:border-blue-300 transition">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="text-sm font-bold text-slate-500 tracking-wider">UREA DOSE</div>
-                        <div class="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded">Kg / Ha</div>
-                    </div>
-                    <div class="text-5xl font-extrabold text-slate-800" id="dose-urea">--</div>
-                </div>
-
-                <!-- SP-36 -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:border-amber-300 transition">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="text-sm font-bold text-slate-500 tracking-wider">SP-36 DOSE</div>
-                        <div class="bg-amber-50 text-amber-700 text-xs font-bold px-2 py-1 rounded">Kg / Ha</div>
-                    </div>
-                    <div class="text-5xl font-extrabold text-slate-800" id="dose-sp36">--</div>
-                </div>
-
-                <!-- KCL -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:border-purple-300 transition">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="text-sm font-bold text-slate-500 tracking-wider">KCL DOSE</div>
-                        <div class="bg-purple-50 text-purple-700 text-xs font-bold px-2 py-1 rounded">Kg / Ha</div>
-                    </div>
-                    <div class="text-5xl font-extrabold text-slate-800" id="dose-kcl">--</div>
-                </div>
-            </div>
+            @include('partials.fertilizer-recommendation')
         @endif
 
     </main>
