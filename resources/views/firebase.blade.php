@@ -47,6 +47,7 @@
             <div class="text-xs text-slate-400 flex items-center space-x-1">
                 <span>GPS:</span>
                 <span id="gps-status" class="font-medium text-slate-600">Checking...</span>
+                <span id="gps-location" class="ml-2 font-medium text-emerald-600 hidden"></span>
             </div>
         </div>
     </header>
@@ -109,6 +110,9 @@
     </main>
 
     <script>
+        let lastLat = null;
+        let lastLon = null;
+
         function formatFertilityClass(value) {
             if (value === undefined || value === null || value === '') {
                 return '--';
@@ -140,40 +144,98 @@
                 // Validasi null (jika data null dari firebase)
                 if (!data) return;
 
-                // Mapping NPK Reg Values
-                if (data.npk_reg) {
-                    document.getElementById('val-n').innerText = (data.npk_reg.N !== undefined && data.npk_reg.N !== null) ? data.npk_reg.N.toFixed(3) : '--';
-                    document.getElementById('val-p').innerText = (data.npk_reg.P !== undefined && data.npk_reg.P !== null) ? data.npk_reg.P.toFixed(2) : '--';
-                    document.getElementById('val-k').innerText = (data.npk_reg.K !== undefined && data.npk_reg.K !== null) ? data.npk_reg.K.toFixed(2) : '--';
-                    document.getElementById('val-ph').innerText = (data.npk_reg.ph !== undefined && data.npk_reg.ph !== null) ? data.npk_reg.ph.toFixed(2) : '--';
+                // Mapping NPK & pH Values
+                if (data.npk) {
+                    const elN = document.getElementById('val-n'); if(elN) elN.innerText = (data.npk.N !== undefined && data.npk.N !== null) ? data.npk.N.toFixed(4) : '--';
+                    const elP = document.getElementById('val-p'); if(elP) elP.innerText = (data.npk.P !== undefined && data.npk.P !== null) ? data.npk.P.toFixed(2) : '--';
+                    const elK = document.getElementById('val-k'); if(elK) elK.innerText = (data.npk.K !== undefined && data.npk.K !== null) ? data.npk.K.toFixed(2) : '--';
+                } else if (data.npk_reg) {
+                    const elN = document.getElementById('val-n'); if(elN) elN.innerText = (data.npk_reg.N !== undefined && data.npk_reg.N !== null) ? data.npk_reg.N.toFixed(4) : '--';
+                    const elP = document.getElementById('val-p'); if(elP) elP.innerText = (data.npk_reg.P !== undefined && data.npk_reg.P !== null) ? data.npk_reg.P.toFixed(2) : '--';
+                    const elK = document.getElementById('val-k'); if(elK) elK.innerText = (data.npk_reg.K !== undefined && data.npk_reg.K !== null) ? data.npk_reg.K.toFixed(2) : '--';
+                }
+
+                const elPh = document.getElementById('val-ph');
+                if (elPh) {
+                    if (data.ph !== undefined && data.ph !== null) {
+                        elPh.innerText = data.ph.toFixed(2);
+                    } else if (data.npk_reg && data.npk_reg.ph !== undefined && data.npk_reg.ph !== null) {
+                        elPh.innerText = data.npk_reg.ph.toFixed(2);
+                    } else {
+                        elPh.innerText = '--';
+                    }
                 }
 
                 if (data.kelas_kesuburan !== undefined && data.kelas_kesuburan !== null) {
-                    document.getElementById('fertility-class').innerText = formatFertilityClass(data.kelas_kesuburan);
+                    const elClass = document.getElementById('fertility-class');
+                    if(elClass) elClass.innerText = formatFertilityClass(data.kelas_kesuburan);
                 }
 
                 // Mapping Fertilizer Dose Values
                 if (data.fert_dose) {
-                    document.getElementById('dose-urea').innerText = data.fert_dose.UREA ?? '--';
-                    document.getElementById('dose-sp36').innerText = data.fert_dose["SP-36"] ?? '--';
-                    document.getElementById('dose-kcl').innerText = data.fert_dose.KCL ?? '--';
+                    const doseUrea = document.getElementById('dose-urea'); if(doseUrea) doseUrea.innerText = data.fert_dose.UREA ?? '--';
+                    const doseSp36 = document.getElementById('dose-sp36'); if(doseSp36) doseSp36.innerText = data.fert_dose["SP-36"] ?? '--';
+                    const doseKcl = document.getElementById('dose-kcl'); if(doseKcl) doseKcl.innerText = data.fert_dose.KCL ?? '--';
                 }
 
                 // Mapping GPS
-                const isUpdated = data.gps_updated === true || data.gps?.gps_updated === true;
+                const hasGpsData = data.gps && data.gps.lat !== undefined && data.gps.lon !== undefined;
+                const isUpdated = hasGpsData || data.gps_updated === true || data.gps?.gps_updated === true;
+                
                 if (data.gps || data.gps_updated !== undefined) {
-                    document.getElementById('gps-status').innerText = isUpdated ? "Active" : "Not Updated";
-                    document.getElementById('gps-status').className = isUpdated ? "font-bold text-emerald-600" : "font-bold text-red-500";
-                    document.getElementById('gps-update-status').innerText = isUpdated ? "Aktif" : "Tidak Aktif";
-                    document.getElementById('gps-update-status').className = isUpdated ? "text-3xl font-extrabold text-emerald-600" : "text-3xl font-extrabold text-red-500";
+                    const elGpsStatus = document.getElementById('gps-status');
+                    if(elGpsStatus) {
+                        elGpsStatus.innerText = isUpdated ? "Active" : "Not Updated";
+                        elGpsStatus.className = isUpdated ? "font-bold text-emerald-600" : "font-bold text-red-500";
+                    }
+                    const elGpsUpdate = document.getElementById('gps-update-status');
+                    if(elGpsUpdate) {
+                        elGpsUpdate.innerText = isUpdated ? "Aktif" : "Tidak Aktif";
+                        elGpsUpdate.className = isUpdated ? "text-sm font-bold text-emerald-600" : "text-sm font-bold text-red-500";
+                    }
+                    
+                    // Fetch location details using OpenStreetMap Nominatim API if GPS lat/lon updated
+                    if (hasGpsData && (data.gps.lat !== lastLat || data.gps.lon !== lastLon)) {
+                        lastLat = data.gps.lat;
+                        lastLon = data.gps.lon;
+                        
+                        const elGpsLocation = document.getElementById('gps-location');
+                        if (elGpsLocation) {
+                            elGpsLocation.classList.remove('hidden');
+                            elGpsLocation.innerText = `(${data.gps.lat}, ${data.gps.lon})`;
+                        }
+                        
+                        const elGpsLocationCard = document.getElementById('gps-location-card');
+                        if (elGpsLocationCard) {
+                            elGpsLocationCard.innerText = 'Mencari lokasi...';
+                            
+                            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.gps.lat}&lon=${data.gps.lon}`)
+                                .then(res => res.json())
+                                .then(locData => {
+                                    if (locData && locData.display_name) {
+                                        const shortName = locData.display_name.split(',').slice(0, 3).join(',');
+                                        elGpsLocationCard.innerText = shortName;
+                                    } else {
+                                        elGpsLocationCard.innerText = 'Lokasi tidak ditemukan';
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error("Geocoding Error:", err);
+                                    elGpsLocationCard.innerText = `${data.gps.lat}, ${data.gps.lon}`;
+                                });
+                        }
+                    }
                 }
 
                 // Mapping Timestamp
-                if (data.timestamp) {
-                    const dateObj = new Date(data.timestamp * 1000); // Convert epoch to ms
-                    document.getElementById('timestamp-info').innerText = "Last Updated: " + dateObj.toLocaleString();
-                } else {
-                    document.getElementById('timestamp-info').innerText = "Last Updated: " + new Date().toLocaleTimeString();
+                const elTimestamp = document.getElementById('timestamp-info');
+                if (elTimestamp) {
+                    if (data.timestamp) {
+                        const dateObj = new Date(data.timestamp * 1000); // Convert epoch to ms
+                        elTimestamp.innerText = "Last Updated: " + dateObj.toLocaleString();
+                    } else {
+                        elTimestamp.innerText = "Last Updated: " + new Date().toLocaleTimeString();
+                    }
                 }
 
             } catch (error) {

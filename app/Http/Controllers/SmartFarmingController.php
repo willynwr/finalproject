@@ -16,6 +16,7 @@ class SmartFarmingController extends Controller
             'metricSectionTitle' => 'Predictive Soil Parameters (NPK & pH)',
             'doseSectionTitle' => 'Recommended Fertilizer Doses',
             'showDoseSection' => true,
+            'showFertilityClass' => false,
         ]);
     }
 
@@ -28,6 +29,7 @@ class SmartFarmingController extends Controller
             'metricSectionTitle' => 'Parameter Kesuburan Tanah (NPK & pH)',
             'doseSectionTitle' => 'Indikator Kesuburan Tanah',
             'showDoseSection' => false,
+            'showFertilityClass' => true,
         ]);
     }
 
