@@ -124,6 +124,16 @@
                 .replace(/\b\w/g, (character) => character.toUpperCase());
         }
 
+        function toDisplayNumber(value, fractionDigits = 2) {
+            const numericValue = Number(value);
+
+            if (!Number.isFinite(numericValue)) {
+                return '--';
+            }
+
+            return numericValue.toFixed(fractionDigits);
+        }
+
         async function fetchFirebaseData() {
             const statusInd = document.getElementById('status-indicator');
             const statusText = document.getElementById('status-text');
@@ -145,38 +155,44 @@
                 if (!data) return;
 
                 // Mapping NPK & pH Values
-                if (data.npk) {
-                    const elN = document.getElementById('val-n'); if(elN) elN.innerText = (data.npk.N !== undefined && data.npk.N !== null) ? data.npk.N.toFixed(4) : '--';
-                    const elP = document.getElementById('val-p'); if(elP) elP.innerText = (data.npk.P !== undefined && data.npk.P !== null) ? data.npk.P.toFixed(2) : '--';
-                    const elK = document.getElementById('val-k'); if(elK) elK.innerText = (data.npk.K !== undefined && data.npk.K !== null) ? data.npk.K.toFixed(2) : '--';
-                } else if (data.npk_reg) {
-                    const elN = document.getElementById('val-n'); if(elN) elN.innerText = (data.npk_reg.N !== undefined && data.npk_reg.N !== null) ? data.npk_reg.N.toFixed(4) : '--';
-                    const elP = document.getElementById('val-p'); if(elP) elP.innerText = (data.npk_reg.P !== undefined && data.npk_reg.P !== null) ? data.npk_reg.P.toFixed(2) : '--';
-                    const elK = document.getElementById('val-k'); if(elK) elK.innerText = (data.npk_reg.K !== undefined && data.npk_reg.K !== null) ? data.npk_reg.K.toFixed(2) : '--';
+                const soilSource = data.npk ?? data.npk_reg ?? data;
+
+                const elN = document.getElementById('val-n');
+                if (elN) {
+                    elN.innerText = toDisplayNumber(soilSource.N, 4);
+                }
+
+                const elP = document.getElementById('val-p');
+                if (elP) {
+                    elP.innerText = toDisplayNumber(soilSource.P, 2);
+                }
+
+                const elK = document.getElementById('val-k');
+                if (elK) {
+                    elK.innerText = toDisplayNumber(soilSource.K, 2);
                 }
 
                 const elPh = document.getElementById('val-ph');
                 if (elPh) {
-                    if (data.ph !== undefined && data.ph !== null) {
-                        elPh.innerText = data.ph.toFixed(2);
-                    } else if (data.npk_reg && data.npk_reg.ph !== undefined && data.npk_reg.ph !== null) {
-                        elPh.innerText = data.npk_reg.ph.toFixed(2);
-                    } else {
-                        elPh.innerText = '--';
-                    }
+                    elPh.innerText = toDisplayNumber(soilSource.pH ?? soilSource.ph ?? data.pH ?? data.ph, 2);
                 }
 
-                if (data.kelas_kesuburan !== undefined && data.kelas_kesuburan !== null) {
+                const fertilityClass = data.kelas_kesuburan ?? data.KLS;
+                if (fertilityClass !== undefined && fertilityClass !== null) {
                     const elClass = document.getElementById('fertility-class');
-                    if(elClass) elClass.innerText = formatFertilityClass(data.kelas_kesuburan);
+                    if(elClass) elClass.innerText = formatFertilityClass(fertilityClass);
                 }
 
                 // Mapping Fertilizer Dose Values
-                if (data.fert_dose) {
-                    const doseUrea = document.getElementById('dose-urea'); if(doseUrea) doseUrea.innerText = data.fert_dose.UREA ?? '--';
-                    const doseSp36 = document.getElementById('dose-sp36'); if(doseSp36) doseSp36.innerText = data.fert_dose["SP-36"] ?? '--';
-                    const doseKcl = document.getElementById('dose-kcl'); if(doseKcl) doseKcl.innerText = data.fert_dose.KCL ?? '--';
-                }
+                const fertilizerSource = data.fert_dose ?? data;
+                const doseUrea = document.getElementById('dose-urea');
+                if(doseUrea) doseUrea.innerText = fertilizerSource.UREA ?? fertilizerSource.UD ?? '--';
+
+                const doseSp36 = document.getElementById('dose-sp36');
+                if(doseSp36) doseSp36.innerText = fertilizerSource['SP-36'] ?? fertilizerSource.SP36 ?? fertilizerSource.SD ?? '--';
+
+                const doseKcl = document.getElementById('dose-kcl');
+                if(doseKcl) doseKcl.innerText = fertilizerSource.KCL ?? fertilizerSource.CD ?? '--';
 
                 // Mapping GPS
                 const hasGpsData = data.gps && data.gps.lat !== undefined && data.gps.lon !== undefined;

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Http;
 
 class SmartFarmingController extends Controller
 {
+    private const FIREBASE_BASE_URL = 'https://lora-tes-default-rtdb.asia-southeast1.firebasedatabase.app';
+
     public function rekomendasiPupuk()
     {
         return view('firebase', [
@@ -35,12 +37,12 @@ class SmartFarmingController extends Controller
 
     public function rekomendasiData(): JsonResponse
     {
-        return $this->fetchFirebaseData('https://final-project-5fbba-default-rtdb.asia-southeast1.firebasedatabase.app/.json');
+        return $this->fetchFirebaseData(self::FIREBASE_BASE_URL . '/willy.json');
     }
 
     public function kesuburanData(): JsonResponse
     {
-        return $this->fetchFirebaseData('https://rizki-project-a46c6-default-rtdb.asia-southeast1.firebasedatabase.app/kesuburan.json');
+        return $this->fetchFirebaseData(self::FIREBASE_BASE_URL . '/des.json');
     }
 
     private function fetchFirebaseData(string $url): JsonResponse
@@ -48,22 +50,7 @@ class SmartFarmingController extends Controller
         $response = Http::get($url);
 
         if ($response->successful()) {
-            $data = $response->json();
-
-            if (isset($data['smart_soil']['latest'])) {
-                return response()->json($data['smart_soil']['latest']);
-            }
-
-            if (isset($data['latest'])) {
-                return response()->json($data['latest']);
-            }
-
-            if (isset($data['smart_soil']['history']) && is_array($data['smart_soil']['history'])) {
-                $latestData = end($data['smart_soil']['history']);
-                return response()->json($latestData);
-            }
-
-            return response()->json($data);
+            return response()->json($response->json());
         }
 
         return response()->json([
