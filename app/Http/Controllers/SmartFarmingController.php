@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 class SmartFarmingController extends Controller
 {
     private const FIREBASE_BASE_URL = 'https://lora-tes-default-rtdb.asia-southeast1.firebasedatabase.app';
+    private const SHAP_BASE_URL     = 'http://203.194.115.209:8016';
 
     public function rekomendasiPupuk()
     {
@@ -43,6 +44,20 @@ class SmartFarmingController extends Controller
     public function kesuburanData(): JsonResponse
     {
         return $this->fetchFirebaseData(self::FIREBASE_BASE_URL . '/des.json');
+    }
+
+    public function shapData(): JsonResponse
+    {
+        $response = Http::timeout(10)->get(self::SHAP_BASE_URL . '/shap/firebase-latest');
+
+        if ($response->successful()) {
+            return response()->json($response->json());
+        }
+
+        return response()->json([
+            'error'   => 'Gagal mengambil data SHAP',
+            'details' => $response->status(),
+        ], 500);
     }
 
     private function fetchFirebaseData(string $url): JsonResponse

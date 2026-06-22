@@ -14,3 +14,5 @@ Route::get('/api/rekomendasi-data', [SmartFarmingController::class, 'rekomendasi
 Route::get('/kesuburan-tanah', [SmartFarmingController::class, 'kesuburanTanah']);
 
 Route::get('/api/kesuburan-data', [SmartFarmingController::class, 'kesuburanData']);
+
+Route::get('/api/shap-data', [SmartFarmingController::class, 'shapData']);

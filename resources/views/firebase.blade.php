@@ -134,14 +134,88 @@
             return numericValue.toFixed(fractionDigits);
         }
 
+        /* ──────────────────────────────────────────────
+           SHAP Renderer
+        ────────────────────────────────────────────── */
+        const SHAP_COLORS = {
+            'UREA':  { bar: 'bg-blue-500',   track: 'bg-blue-100',   badge: 'bg-blue-50 text-blue-700',   ring: 'ring-blue-200' },
+            'SP-36': { bar: 'bg-amber-500',  track: 'bg-amber-100',  badge: 'bg-amber-50 text-amber-700',  ring: 'ring-amber-200' },
+            'KCL':   { bar: 'bg-purple-500', track: 'bg-purple-100', badge: 'bg-purple-50 text-purple-700', ring: 'ring-purple-200' },
+        };
+
+        function featureLabel(feature) {
+            const map = { 'N (%)': 'Nitrogen (N)', 'P (ppm)': 'Phosphorus (P)', 'K (ppm)': 'Potassium (K)' };
+            return map[feature] ?? feature;
+        }
+
+        function renderShapCards(shapData) {
+            const grid = document.getElementById('shap-grid');
+            const badge = document.getElementById('shap-status-badge');
+            if (!grid) return;
+
+            if (!shapData || !Array.isArray(shapData) || shapData.length === 0) {
+                grid.innerHTML = `<div class="md:col-span-3 bg-white rounded-2xl border border-slate-100 p-8 text-center text-slate-400 text-sm">Data SHAP tidak tersedia.</div>`;
+                if (badge) { badge.textContent = 'Tidak Tersedia'; badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-50 text-red-500 border border-red-200'; }
+                return;
+            }
+
+            if (badge) { badge.textContent = 'Live'; badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-violet-50 text-violet-600 border border-violet-200'; }
+
+            grid.innerHTML = shapData.map(item => {
+                const col = SHAP_COLORS[item.fertilizer] ?? SHAP_COLORS['UREA'];
+                const featureBars = (item.feature_importances ?? []).map(f => `
+                    <div class="mb-3 last:mb-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-semibold text-slate-600">${featureLabel(f.feature)}</span>
+                            <span class="text-xs font-bold text-slate-700">${f.importance_pct.toFixed(1)}%</span>
+                        </div>
+                        <div class="w-full ${col.track} rounded-full h-2.5 overflow-hidden">
+                            <div class="${col.bar} h-2.5 rounded-full transition-all duration-700" style="width:${f.importance_pct}%"></div>
+                        </div>
+                        <div class="text-right text-[10px] text-slate-400 mt-0.5">SHAP: ${f.shap_value.toFixed(4)}</div>
+                    </div>
+                `).join('');
+
+                return `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 ring-1 ${col.ring} hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Pupuk</div>
+                            <div class="text-xl font-extrabold text-slate-800">${item.fertilizer}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="${col.badge} text-xs font-bold px-2 py-1 rounded">Dosis: ${item.predicted_dose_kg_ha} Kg/Ha</span>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 pt-4">
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Feature Importance</div>
+                        ${featureBars}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        /* ──────────────────────────────────────────────
+           Main Fetch (Firebase + SHAP parallel)
+        ────────────────────────────────────────────── */
         async function fetchFirebaseData() {
             const statusInd = document.getElementById('status-indicator');
             const statusText = document.getElementById('status-text');
             const apiUrl = @json($apiEndpoint ?? '/api/rekomendasi-data');
+            const shapUrl = '/api/shap-data';
 
             try {
-                // Request ke proxy Backend
-                const response = await fetch(apiUrl);
+                // Fetch Firebase & SHAP secara paralel
+                const [firebaseRes, shapRes] = await Promise.allSettled([
+                    fetch(apiUrl),
+                    fetch(shapUrl)
+                ]);
+
+                // ── Handle Firebase ──
+                if (firebaseRes.status !== 'fulfilled' || !firebaseRes.value.ok) {
+                    throw new Error('Firebase fetch failed');
+                }
+                const response = firebaseRes.value;
                 if (!response.ok) throw new Error('Network response was not ok');
                 
                 const data = await response.json();
@@ -150,6 +224,16 @@
                 // Update Status Bar
                 statusInd.className = "w-3 h-3 rounded-full bg-emerald-500";
                 statusText.innerText = "Connected (Live)";
+
+                // ── Handle SHAP (selalu diproses, meski data firebase null) ──
+                if (shapRes.status === 'fulfilled' && shapRes.value.ok) {
+                    const shapData = await shapRes.value.json();
+                    console.log("SHAP data:", shapData);
+                    renderShapCards(shapData.shap ?? null);
+                } else {
+                    console.warn("SHAP fetch failed or unavailable");
+                    renderShapCards(null);
+                }
 
                 // Validasi null (jika data null dari firebase)
                 if (!data) return;
@@ -258,6 +342,7 @@
                 console.error("Fetch Error:", error);
                 statusInd.className = "w-3 h-3 rounded-full bg-red-600";
                 statusText.innerText = "Connection Error";
+                renderShapCards(null);
             }
         }
 
