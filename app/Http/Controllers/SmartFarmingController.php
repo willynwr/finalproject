@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Http;
 
 class SmartFarmingController extends Controller
 {
-    private const FIREBASE_BASE_URL = 'https://rizki-project-a46c6-default-rtdb.asia-southeast1.firebasedatabase.app';
+    private const FIREBASE_PUPUK_URL     = 'https://lora-tes-default-rtdb.asia-southeast1.firebasedatabase.app';
+    private const FIREBASE_KESUBURAN_URL = 'https://rizki-project-a46c6-default-rtdb.asia-southeast1.firebasedatabase.app';
     private const SHAP_BASE_URL     = 'http://203.194.115.209:8016';
 
     public function rekomendasiPupuk()
@@ -38,12 +39,12 @@ class SmartFarmingController extends Controller
 
     public function rekomendasiData(): JsonResponse
     {
-        return $this->fetchFirebaseData(self::FIREBASE_BASE_URL . '/willy.json');
+        return $this->fetchFirebaseData(self::FIREBASE_PUPUK_URL . '/willy.json');
     }
 
     public function kesuburanData(): JsonResponse
     {
-        return $this->fetchFirebaseData(self::FIREBASE_BASE_URL . '/kesuburan/latest.json');
+        return $this->fetchFirebaseData(self::FIREBASE_KESUBURAN_URL . '/kesuburan/latest.json');
     }
 
     public function shapData(): JsonResponse
