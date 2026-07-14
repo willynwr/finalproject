@@ -258,7 +258,7 @@
 
                 const elPh = document.getElementById('val-ph');
                 if (elPh) {
-                    elPh.innerText = toDisplayNumber(soilSource.pH ?? soilSource.ph ?? data.pH ?? data.ph, 2);
+                    elPh.innerText = toDisplayNumber(soilSource.ph ?? soilSource.pH ?? data.ph ?? data.pH, 2);
                 }
 
                 const fertilityClass = data.kelas_kesuburan ?? data.KLS;
